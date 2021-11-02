@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
-#include <string>
+#include <cstdio>
 #include <algorithm>
+#include <string>
+#include <queue>
 #include "familyTreeNode.h"
 #include "function.h"
 using namespace std;
@@ -9,7 +11,7 @@ using namespace std;
 class familyTree
 {
     private:
-        familyTreeNode *root;  //老祖宗
+        familyTreeNode* root;  //老祖宗
     public:
         //构造函数
         familyTree()
@@ -22,15 +24,15 @@ class familyTree
             return root;
         }
         //设置祖先信息
-        void setRoot(familyTreeNode *root)
+        void setRoot(familyTreeNode* root)
         {
             this->root = root;
         }
-        //创建一个节点
-        bool create(familyTreeNode **person)
+        //创建节点信息
+        bool create(familyTreeNode** person)
         {
             int tag;
-	        cout << "输入一个数（输入0表示该节点为空）:" << endl;
+	        cout << "输入一个数（输入0表示该节点为空）:";
 	        cin >> tag;
 	        if (!tag)
 	        {
@@ -46,12 +48,12 @@ class familyTree
                 (*person)->parent = NULL;
                 //输入信息
                 cout << "请输入相关信息" << endl;
-                input(&((*person)->information));
-                //有配偶才能有孩子
+                inputInformationOfFamilyMember(&((*person)->information));
+                //有配偶才有孩子
                 if((*person)->information.married)
                 {
-                    cout << "请输入配偶信息" << endl;
-                    input(&((*person)->mate));
+                    cout << "=====================配偶信息录入=====================" << endl;
+                    inputInformationOfFamilyMember(&((*person)->mate));
                     create(&((*person)->lchild));
                     if((*person)->lchild)
                     {
@@ -67,6 +69,7 @@ class familyTree
                     }
                     else
                     {
+                        cout << "=====================二胎信息录入=====================" << endl;
                         create(&((*person)->rchild));
                         if((*person)->rchild)
                         {
@@ -82,11 +85,11 @@ class familyTree
             return true;
         }
         //找到与p节点相连的前一个节点
-        familyTreeNode* findParent(familyTreeNode *person)
+        familyTreeNode* findParent(familyTreeNode* person)
         {
             if(person)
             {
-                familyTreeNode *temp;
+                familyTreeNode* temp;
                 temp = person->parent;
                 if(temp)
                 {
@@ -103,7 +106,7 @@ class familyTree
                 return NULL;
             }
         }
-        //查询节点信息
+        //搜索节点信息
         familyTreeNode* searchNode(familyTreeNode* person, const string name)
         {
             if(person)
@@ -167,9 +170,392 @@ class familyTree
             }
             return false;
         }
-        //显示家谱信息:二叉树的层次遍历
-        void dispFamily(familyTreeNode* person)
+        //显示指定成员信息
+        void dispNode(const string name)
         {
-            
+            familyTreeNode* temp;
+            temp = searchNode(root, name);
+            if(temp)
+            {
+                cout << "已找到成员" << name << "的有关信息" << endl;
+                dispInformationOfFamilyMember(temp);
+            }
+            else
+            {
+                cout << "未能查询到成员" << name << "的信息" << endl;
+            }
+        }
+        //显示家谱信息:二叉树的层次遍历
+        void dispFamily()
+        {
+            queue<familyTreeNode*> que;
+            if (root == NULL)
+            {
+                return;
+            }
+            que.push(root);  //根节点入队
+            int currentLevelCount = 1;  //当前层次的节点数，初始值为1
+            int nextLevelCount = 0;  //下一层次的节点数
+            while(!que.empty())
+            {
+                //出队并访问节点
+                familyTreeNode* front = que.front();
+                cout << front->information.name << " ";
+                que.pop();
+                currentLevelCount--;
+                //左子节点入队
+                if(front->lchild)
+                {
+                    que.push(front->lchild);
+                    nextLevelCount++;
+                }
+                //右子节点入队
+                if(front->rchild)
+                {
+                    que.push(front->rchild);
+                    nextLevelCount++;
+                }
+                //当前层次的节点数为0时，换行
+                if(currentLevelCount == 0)
+                {
+                    cout << endl;
+                    currentLevelCount = nextLevelCount;
+                    nextLevelCount = 0;
+                }   
+            }
+        }
+        //修改家谱成员信息
+        bool changeFamily(const string name)
+        {
+            familyTreeNode* temp;
+            temp = searchNode(root, name);
+            if(temp)
+            {   
+                cout << "已找到成员" << name << "的有关信息" << endl;
+                dispInformationOfFamilyMember(temp);  //显示基本信息
+                
+                cout << "成员" << name << "的以下信息可以修改：" << endl;
+                cout << "1、姓名" << endl;
+                cout << "2、性别" << endl;
+                cout << "3、年龄" << endl;
+                cout << "4、地址" << endl;
+                cout << "5、出生日期" << endl;
+                cout << "6、健在否" << endl;
+                cout << "7、修改配偶信息" << endl;
+
+                int choice;
+                cout << "请输入要修改的选项标号：";
+                cin >> choice;
+
+                //修改成员信息
+                switch(choice)
+                {
+                    //修改姓名
+                    case 1:
+                    {
+                        string nameChanged;
+                        bool confirm;
+                        cout << "修改前的姓名为：" << temp->information.name << endl;
+                        cout << "请输入修改后的姓名：";
+                        cin >> nameChanged;
+                        cout << "是否确认修改？（0为否，1为是）：" ;
+                        cin >> confirm;
+                        if(confirm == true)
+                        {
+                            cout << "修改成功" << endl;
+                            temp->information.name = nameChanged;
+                        }
+                        else
+                        {
+                            cout << "修改已取消" << endl;
+                        }
+                        break;
+                    }
+                    //修改性别
+                    case 2:
+                    {
+                        string sexChanged;
+                        bool confirm;
+                        cout << "修改前的性别为：" << temp->information.sex << endl;
+                        cout << "请输入修改后的性别：";
+                        cin >> sexChanged;
+                        cout << "是否确认修改？（0为否，1为是）：" ;
+                        cin >> confirm;
+                        if(confirm == true)
+                        {
+                            cout << "修改成功" << endl;
+                            temp->information.sex = sexChanged;
+                        }
+                        else
+                        {
+                            cout << "修改已取消" << endl;
+                        }
+                        break;
+                    }
+                    //修改年龄
+                    case 3:
+                    {
+                        int ageChanged;
+                        bool confirm;
+                        cout << "修改前的年龄为：" << temp->information.age << endl;
+                        cout << "请输入修改后的年龄：";
+                        cin >> ageChanged;
+                        cout << "是否确认修改？（0为否，1为是）：" ;
+                        cin >> confirm;
+                        if(confirm == true)
+                        {
+                            cout << "修改成功" << endl;
+                            temp->information.age = ageChanged;
+                        }
+                        else
+                        {
+                            cout << "修改已取消" << endl;
+                        }
+                        break;
+                    }
+                    //修改地址
+                    case 4:
+                    {
+                        string addressChanged;
+                        bool confirm;
+                        cout << "修改前的地址为：" << temp->information.address << endl;
+                        cout << "请输入修改后的地址：";
+                        cin >> addressChanged;
+                        cout << "是否确认修改？（0为否，1为是）：" ;
+                        cin >> confirm;
+                        if(confirm == true)
+                        {
+                            cout << "修改成功" << endl;
+                            temp->information.address = addressChanged;
+                        }
+                        else
+                        {
+                            cout << "修改已取消" << endl;
+                        }
+                        break;
+                    }
+                    //修改出生日期
+                    case 5:
+                    {
+                        int yearBirthChanged, monthBirthChanged, dayBirthChanged;
+                        bool confirm;
+                        cout << "修改前的出生日期为：" << temp->information.yearBirth << "/" 
+                             << temp->information.monthBirth << "/" << temp->information.dayBirth << endl;
+                        cout << "请输入修改后的出生日期（年/月/日）：";
+                        scanf("%d/%d/%d", &yearBirthChanged, &monthBirthChanged, &dayBirthChanged);
+                        cout << "是否确认修改？（0为否，1为是）：" ;
+                        cin >> confirm;
+                        if(confirm == true)
+                        {
+                            temp->information.yearBirth = yearBirthChanged;
+                            temp->information.monthBirth = monthBirthChanged;
+                            temp->information.dayBirth = dayBirthChanged;
+                            cout << "修改成功" << endl;
+                            
+                        }
+                        else
+                        {
+                            cout << "修改已取消" << endl;
+                        }
+                        break;
+                    }
+                    //修改健在情况
+                    case 6:
+                    {
+                        cout << "修改前的健在情况：";
+                        if(temp->information.live == true)
+                        {
+                            cout << "健在" << endl;
+                        }
+                        else
+                        {
+                            cout << "已逝" << endl;
+                        }
+
+                        bool liveChanged;
+                        cout << "请输入修改后的健在情况（0为否，1为是）:";
+                        cin >> liveChanged;
+
+                        if(liveChanged == false)
+                        {
+                            int yearDeathChanged, monthDeathChanged, dayDeathChanged;
+                            bool confirm;
+                            cout << "请输入死亡日期（年/月/日）：";
+                            scanf("%d/%d/%d", &yearDeathChanged, &monthDeathChanged, &dayDeathChanged);
+                            cout << "是否确认修改？（0为否，1为是）：";
+                            cin >> confirm;
+                            if(confirm == true)
+                            {
+                                temp->information.yearDeath = yearDeathChanged;
+                                temp->information.monthDeath = monthDeathChanged;
+                                temp->information.dayDeath = dayDeathChanged;
+                                cout << "修改成功" << endl;
+                            }
+                            else
+                            {
+                                cout << "修改已取消" << endl;
+                            }
+                        }
+                        break;
+                    }
+                    //修改配偶信息
+                    case 7:
+                    {
+                        cout << "=====================配偶信息修改=====================" << endl;
+                        cout << "配偶" << temp->mate.name << "的以下信息可以修改：" << endl;
+                        cout << "1、姓名" << endl;
+                        cout << "2、年龄" << endl;
+                        cout << "3、地址" << endl;
+                        cout << "4、出生日期" << endl;
+                        cout << "5、健在否" << endl;
+
+                        int choiceMate;
+                        cout << "请输入要修改的选项标号：";
+                        cin >> choiceMate;
+
+                        switch (choiceMate)
+                        {
+                            //修改姓名
+                            case 1:
+                            {
+                                string nameChanged;
+                                bool confirm;
+                                cout << "修改前的配偶姓名为：" << temp->information.name << endl;
+                                cout << "请输入修改后的配偶姓名：";
+                                cin >> nameChanged;
+                                cout << "是否确认修改？（0为否，1为是）：" ;
+                                cin >> confirm;
+                                if(confirm == true)
+                                {
+                                    cout << "修改成功" << endl;
+                                    temp->mate.name = nameChanged;
+                                }
+                                else
+                                {
+                                    cout << "修改已取消" << endl;
+                                }
+                                break;
+                            }
+                            //修改年龄
+                            case 2:
+                            {
+                                int ageChanged;
+                                bool confirm;
+                                cout << "修改前配偶的年龄为：" << temp->information.age << endl;
+                                cout << "请输入修改后配偶的年龄：";
+                                cin >> ageChanged;
+                                cout << "是否确认修改？（0为否，1为是）：" ;
+                                cin >> confirm;
+                                if(confirm == true)
+                                {
+                                    cout << "修改成功" << endl;
+                                    temp->information.age = ageChanged;
+                                }
+                                else
+                                {
+                                    cout << "修改已取消" << endl;
+                                }
+                                break;
+                            }
+                            //修改地址
+                            case 3:
+                            {
+                                string addressChanged;
+                                bool confirm;
+                                cout << "修改前配偶的地址为：" << temp->information.address << endl;
+                                cout << "请输入修改后配偶的地址：";
+                                cin >> addressChanged;
+                                cout << "是否确认修改？（0为否，1为是）：" ;
+                                cin >> confirm;
+                                if(confirm == true)
+                                {
+                                    cout << "修改成功" << endl;
+                                    temp->information.address = addressChanged;
+                                }
+                                else
+                                {
+                                    cout << "修改已取消" << endl;
+                                }
+                                break;
+                            }
+                            //修改出生日期
+                            case 4:
+                            {
+                                int yearBirthChanged, monthBirthChanged, dayBirthChanged;
+                                bool confirm;
+                                cout << "修改前配偶的出生日期为：" << temp->information.yearBirth << "/" 
+                                     << temp->information.monthDeath << "/" << temp->information.dayBirth << endl;
+                                cout << "请输入修改后配偶的出生日期（年/月/日）：";
+                                scanf("%d/%d/%d", &yearBirthChanged, &monthBirthChanged, &dayBirthChanged);
+                                cout << "是否确认修改？（0为否，1为是）：" ;
+                                cin >> confirm;
+                                if(confirm == true)
+                                {
+                                    temp->information.yearBirth = yearBirthChanged;
+                                    temp->information.monthBirth = monthBirthChanged;
+                                    temp->information.dayBirth = dayBirthChanged;
+                                    cout << "修改成功" << endl;
+                            
+                                }
+                                else
+                                {
+                                    cout << "修改已取消" << endl;
+                                }
+                                break;
+                            }
+                            //修改健在情况
+                            case 5:
+                            {
+                                cout << "修改前的配偶健在情况：";
+                                if(temp->information.live == true)
+                                {
+                                    cout << "健在" << endl;
+                                }
+                                else
+                                {
+                                    cout << "已逝" << endl;
+                                }
+
+                                bool liveChanged;
+                                cout << "请输入修改后的配偶健在情况（0为否，1为是）:";
+                                cin >> liveChanged;
+
+                                if(liveChanged == false)
+                                {
+                                    int yearDeathChanged, monthDeathChanged, dayDeathChanged;
+                                    bool confirm;
+                                    cout << "请输入配偶的死亡日期（年/月/日）：";
+                                    scanf("%d/%d/%d", &yearDeathChanged, &monthDeathChanged, &dayDeathChanged);
+                                    cout << "是否确认修改？（0为否，1为是）：";
+                                    cin >> confirm;
+                                    if(confirm == true)
+                                    {
+                                        temp->information.yearDeath = yearDeathChanged;
+                                        temp->information.monthDeath = monthDeathChanged;
+                                        temp->information.dayDeath = dayDeathChanged;
+                                        cout << "修改成功" << endl;
+                                    }
+                                    else
+                                    {
+                                        cout << "修改已取消" << endl;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    default:
+                    {
+                        cout << "错误的输入" << endl;
+                        break;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                cout << "未能查询到成员" << name << "的信息" << endl;
+                return false;
+            }
         }
 };
