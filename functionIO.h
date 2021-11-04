@@ -86,6 +86,22 @@ void dispInformationOfFamilyMember(familyTreeNode* person)
     {
         cout << "未婚" << endl;
     }
-    cout << "=====================================================" << endl;
+    cout << "======================================================" << endl;
     cout << endl;
+}
+//显示第n代所有人信息
+void dispInformationOfNthLevel(familyTreeNode* person, int n)
+{
+    static int depth = 0;
+    depth++;
+    if(person)
+    {
+        if(depth == n)
+        {
+            dispInformationOfFamilyMember(person);
+        }
+        dispInformationOfNthLevel(person->lchild, n);
+        dispInformationOfNthLevel(person->rchild, n);
+    }
+    depth--;
 }
